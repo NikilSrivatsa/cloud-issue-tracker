@@ -1,6 +1,6 @@
 # Cloud Issue Tracker
 
-Major Project submission for a 2-member team using AWS Cloud, Git, Jenkins, Docker, and Terraform.
+Major Project submission using AWS Cloud, Git, Jenkins, Docker, and Terraform.
 
 ## Project Summary
 
