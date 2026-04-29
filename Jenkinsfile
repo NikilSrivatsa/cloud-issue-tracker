@@ -1,6 +1,11 @@
 pipeline {
   agent any
 
+  parameters {
+    string(name: 'AWS_KEY_NAME', defaultValue: 'cloud-project-key', description: 'Existing AWS EC2 key pair name')
+    string(name: 'ADMIN_CIDR', defaultValue: '0.0.0.0/0', description: 'CIDR allowed for SSH. For demo use your-public-ip/32.')
+  }
+
   environment {
     AWS_DEFAULT_REGION = 'ap-south-1'
     TF_DIR = 'terraform'
@@ -24,8 +29,8 @@ pipeline {
     stage('Provision AWS Infrastructure') {
       steps {
         dir("${TF_DIR}") {
-          sh 'terraform init'
-          sh 'terraform apply -auto-approve'
+          sh 'terraform init -input=false'
+          sh 'terraform apply -auto-approve -input=false -var="key_name=$AWS_KEY_NAME" -var="admin_cidr=$ADMIN_CIDR"'
         }
       }
     }
