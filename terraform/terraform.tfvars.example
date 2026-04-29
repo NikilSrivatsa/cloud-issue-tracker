@@ -1,2 +1,0 @@
-key_name   = "your-existing-aws-keypair-name"
-admin_cidr = "YOUR_PUBLIC_IP/32"
