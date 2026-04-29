@@ -1,0 +1,13 @@
+services:
+  cloud-issue-tracker:
+    build: .
+    image: cloud-issue-tracker:latest
+    ports:
+      - "5001:5000"
+    volumes:
+      - issue-data:/data
+    environment:
+      SECRET_KEY: change-this-in-production
+
+volumes:
+  issue-data:
