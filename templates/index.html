@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CloudOps Issue Center</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">AWS DevOps Major Project</p>
+        <h1>CloudOps Issue Center</h1>
+        <p class="subhead">Track production issues, owners, priorities, environments, and live deployment health from one dynamic dashboard.</p>
+        <p class="session-line">Signed in as <strong>{{ user.name }}</strong> ({{ user.role }})</p>
+      </div>
+      <div class="hero-actions">
+        <a class="button secondary" href="/api/issues">Export JSON</a>
+        <a class="button secondary" href="/health">Health API</a>
+        <a class="button" href="#new-issue">New Issue</a>
+        <a class="button danger-link" href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="messages">
+          {% for category, message in messages %}
+            <p class="message {{ category }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="metrics" aria-label="Issue summary">
+      <article>
+        <span>Total Tickets</span>
+        <strong>{{ counts.total or 0 }}</strong>
+      </article>
+      <article>
+        <span>Open</span>
+        <strong>{{ counts.open or 0 }}</strong>
+      </article>
+      <article>
+        <span>In Progress</span>
+        <strong>{{ counts.progress or 0 }}</strong>
+      </article>
+      <article>
+        <span>Critical</span>
+        <strong>{{ counts.critical or 0 }}</strong>
+      </article>
+      <article>
+        <span>Resolved</span>
+        <strong>{{ counts.resolved or 0 }}</strong>
+      </article>
+    </section>
+
+    <section class="insights">
+      <article class="panel">
+        <h2>Environment Load</h2>
+        {% if environment_counts %}
+          <div class="environment-list">
+            {% for env in environment_counts %}
+              <div>
+                <span>{{ env.environment }}</span>
+                <strong>{{ env.total }}</strong>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty">No environment data yet.</p>
+        {% endif %}
+      </article>
+      <article class="panel">
+        <h2>Audit Trail</h2>
+        {% if activity %}
+          <div class="audit-list">
+            {% for event in activity %}
+              <p><strong>{{ event.action }}</strong> by {{ event.actor }} <span>{{ event.created_at }}</span></p>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty">Activity appears after ticket actions.</p>
+        {% endif %}
+      </article>
+    </section>
+
+    <section class="workspace">
+      <aside class="stack">
+        <form id="new-issue" class="panel" action="/issues" method="post">
+          <h2>Create Ticket</h2>
+          <label>
+            Issue Title
+            <input type="text" name="title" placeholder="API latency above threshold" required>
+          </label>
+          <label>
+            Owner
+            <input type="text" name="owner" placeholder="Team member name" required>
+          </label>
+          <div class="two-col">
+            <label>
+              Priority
+              <select name="priority">
+                <option>Critical</option>
+                <option>High</option>
+                <option selected>Medium</option>
+                <option>Low</option>
+              </select>
+            </label>
+            <label>
+              Environment
+              <select name="environment">
+                <option selected>Production</option>
+                <option>Staging</option>
+                <option>Development</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            Category
+            <input type="text" name="category" placeholder="Infrastructure, Database, Network">
+          </label>
+          <label>
+            Due Date
+            <input type="date" name="due_date">
+          </label>
+          <label>
+            Description
+            <textarea name="description" rows="4" placeholder="Impact, suspected cause, and next action"></textarea>
+          </label>
+          <button type="submit">Add Ticket</button>
+        </form>
+
+        <section class="panel">
+          <h2>Recent Activity</h2>
+          {% if recent %}
+            <div class="activity-list">
+              {% for item in recent %}
+                <article class="activity">
+                  <span class="dot {{ item.priority | lower }}"></span>
+                  <div>
+                    <p>{{ item.title }}</p>
+                    <small>{{ item.status }} | {{ item.environment }}</small>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="empty">Activity appears after the first ticket is created.</p>
+          {% endif %}
+        </section>
+      </aside>
+
+      <section class="panel list">
+        <div class="list-head">
+          <div>
+            <h2>Operations Board</h2>
+            <p class="muted">Search, filter, and update ticket status during the deployment demo.</p>
+          </div>
+          <form class="filters" method="get">
+            <input type="search" name="q" value="{{ search }}" placeholder="Search tickets">
+            <select name="status">
+              {% for status in ["All", "Open", "In Progress", "Resolved"] %}
+                <option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>{{ status }}</option>
+              {% endfor %}
+            </select>
+            <select name="priority">
+              {% for priority in ["All", "Critical", "High", "Medium", "Low"] %}
+                <option value="{{ priority }}" {% if priority == priority_filter %}selected{% endif %}>{{ priority }}</option>
+              {% endfor %}
+            </select>
+            <select name="environment">
+              {% for environment in ["All", "Production", "Staging", "Development"] %}
+                <option value="{{ environment }}" {% if environment == environment_filter %}selected{% endif %}>{{ environment }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit">Apply</button>
+          </form>
+        </div>
+
+        {% if issues %}
+          <div class="issue-list">
+            {% for issue in issues %}
+              <article class="issue">
+                <div class="issue-main">
+                  <div class="issue-title-row">
+                    <p class="issue-title">{{ issue.title }}</p>
+                    <span class="badge {{ issue.priority | lower }}">{{ issue.priority }}</span>
+                  </div>
+                  <p class="issue-description">{{ issue.description or "No description added." }}</p>
+                  <p class="issue-meta">
+                    Owner: {{ issue.owner }} |
+                    Category: {{ issue.category }} |
+                    Env: {{ issue.environment }} |
+                    Due: {{ issue.due_date or "Not set" }}
+                  </p>
+                </div>
+                <form action="/issues/{{ issue.id }}/status" method="post">
+                  <select name="status" onchange="this.form.submit()">
+                    {% for status in ["Open", "In Progress", "Resolved"] %}
+                      <option value="{{ status }}" {% if status == issue.status %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                  </select>
+                </form>
+                <a class="button secondary small-action" href="{{ url_for('edit_issue', issue_id=issue.id) }}">Edit</a>
+                <form action="/issues/{{ issue.id }}/delete" method="post">
+                  <button class="danger" type="submit">Delete</button>
+                </form>
+              </article>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="empty">No tickets match the current filters. Create a ticket or clear the filters.</p>
+        {% endif %}
+      </section>
+    </section>
+  </main>
+</body>
+</html>
