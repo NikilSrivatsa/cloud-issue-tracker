@@ -21,7 +21,7 @@ pipeline {
 
     stage('Build Docker Image') {
       steps {
-        sh 'docker build -t $IMAGE_NAME .'
+        sh 'docker build --no-cache --platform linux/amd64 -t $IMAGE_NAME .'
         sh 'docker save $IMAGE_NAME -o cloud-issue-tracker.tar'
       }
     }
