@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit Ticket | CloudOps Issue Center</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero compact">
+      <div>
+        <p class="eyebrow">Ticket #{{ issue.id }}</p>
+        <h1>Edit Ticket</h1>
+        <p class="subhead">Update assignment, priority, environment, status, and investigation notes.</p>
+      </div>
+      <div class="hero-actions">
+        <a class="button secondary" href="{{ url_for('index') }}">Back</a>
+      </div>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="messages">
+          {% for category, message in messages %}
+            <p class="message {{ category }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <section class="edit-grid">
+      <form class="panel" method="post">
+        <h2>Ticket Details</h2>
+        <label>
+          Issue Title
+          <input type="text" name="title" value="{{ issue.title }}" required>
+        </label>
+        <label>
+          Owner
+          <input type="text" name="owner" value="{{ issue.owner }}" required>
+        </label>
+        <div class="two-col">
+          <label>
+            Priority
+            <select name="priority">
+              {% for priority in ["Critical", "High", "Medium", "Low"] %}
+                <option value="{{ priority }}" {% if priority == issue.priority %}selected{% endif %}>{{ priority }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Status
+            <select name="status">
+              {% for status in ["Open", "In Progress", "Resolved"] %}
+                <option value="{{ status }}" {% if status == issue.status %}selected{% endif %}>{{ status }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="two-col">
+          <label>
+            Environment
+            <select name="environment">
+              {% for environment in ["Production", "Staging", "Development"] %}
+                <option value="{{ environment }}" {% if environment == issue.environment %}selected{% endif %}>{{ environment }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Due Date
+            <input type="date" name="due_date" value="{{ issue.due_date }}">
+          </label>
+        </div>
+        <label>
+          Category
+          <input type="text" name="category" value="{{ issue.category }}">
+        </label>
+        <label>
+          Description
+          <textarea name="description" rows="6">{{ issue.description }}</textarea>
+        </label>
+        <button type="submit">Save Changes</button>
+      </form>
+
+      <aside class="stack">
+        <form class="panel" action="{{ url_for('add_comment', issue_id=issue.id) }}" method="post">
+          <h2>Add Comment</h2>
+          <label>
+            Investigation Note
+            <textarea name="note" rows="4" placeholder="Add progress update, root cause, or next action"></textarea>
+          </label>
+          <button type="submit">Add Comment</button>
+        </form>
+
+        <section class="panel">
+          <h2>Comments</h2>
+          {% if comments %}
+            <div class="comment-list">
+              {% for comment in comments %}
+                <article class="comment">
+                  <p>{{ comment.note }}</p>
+                  <small>{{ comment.author }} | {{ comment.created_at }}</small>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="empty">No comments yet.</p>
+          {% endif %}
+        </section>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

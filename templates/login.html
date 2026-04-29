@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | CloudOps Issue Center</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-intro">
+      <p class="eyebrow">Secure DevOps Portal</p>
+      <h1>CloudOps Issue Center</h1>
+      <p class="subhead">Sign in to manage tickets, monitor environments, review activity, and demo authenticated dynamic workflows.</p>
+      <div class="demo-users">
+        <h2>Demo Accounts</h2>
+        <p><strong>admin</strong> / admin123</p>
+        <p><strong>devops</strong> / devops123</p>
+        <p><strong>viewer</strong> / viewer123</p>
+      </div>
+    </section>
+
+    <form class="panel login-card" method="post">
+      <h2>Sign In</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="messages">
+            {% for category, message in messages %}
+              <p class="message {{ category }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      <label>
+        Username
+        <input type="text" name="username" value="admin" autocomplete="username" required>
+      </label>
+      <label>
+        Password
+        <input type="password" name="password" value="admin123" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Login</button>
+    </form>
+  </main>
+</body>
+</html>
